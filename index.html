@@ -388,6 +388,94 @@ body {
   pointer-events: none;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
+
+/* ── 모달 ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity 0.2s;
+}
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+.modal {
+  background: #fff; border-radius: 16px; padding: 28px; width: 480px; max-width: 90vw;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 80vh; overflow-y: auto;
+}
+.modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 16px; }
+.modal .field { margin-bottom: 14px; }
+.modal .field label { display: block; font-size: 12px; font-weight: 600; color: #666; margin-bottom: 5px; }
+.modal .field input, .modal .field select {
+  width: 100%; padding: 10px 14px; border: 1px solid #e0e0e0; border-radius: 10px;
+  font-size: 13px; font-family: inherit;
+}
+.modal .field input:focus { outline: none; border-color: var(--accent); }
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.modal-actions .btn { padding: 10px 24px; }
+.btn-cancel { background: #f0f0f0; color: #666; }
+.btn-cancel:hover { background: #e0e0e0; }
+
+/* AI 로딩 */
+.ai-loading {
+  display: flex; align-items: center; gap: 10px; padding: 16px;
+  background: #fff8f0; border-radius: 10px; margin: 10px 0; font-size: 13px; color: #c47000;
+}
+.ai-loading .spinner {
+  width: 18px; height: 18px; border: 2px solid #ffd9a0; border-top-color: var(--accent);
+  border-radius: 50%; animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 자동 조사 패널 */
+.research-panel {
+  background: linear-gradient(135deg, #fff8f0, #fff0e0);
+  border: 1px solid #ffe0c0;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+.research-panel .rp-title {
+  font-size: 12px; font-weight: 700; color: var(--accent); margin-bottom: 12px;
+  display: flex; align-items: center; gap: 6px;
+}
+.research-panel .rp-row {
+  display: flex; gap: 8px; margin-bottom: 8px;
+}
+.research-panel input {
+  flex: 1; padding: 8px 12px; border: 1px solid #ffe0c0; border-radius: 8px;
+  font-size: 12px; font-family: inherit; background: #fff;
+}
+.research-panel input:focus { outline: none; border-color: var(--accent); }
+.research-panel .btn-ai {
+  padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: none; background: var(--accent); color: #fff;
+  white-space: nowrap;
+}
+.research-panel .btn-ai:hover { background: #e55e00; }
+.research-panel .btn-ai:disabled { background: #ccc; cursor: not-allowed; }
+.research-panel .btn-ai-copy {
+  padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+  cursor: pointer; border: 1px solid var(--accent); background: #fff; color: var(--accent);
+  width: 100%;
+}
+.research-panel .btn-ai-copy:hover { background: #fff8f0; }
+.research-panel .btn-ai-copy:disabled { border-color: #ccc; color: #ccc; cursor: not-allowed; }
+
+/* 프로젝트 저장 */
+.project-bar {
+  display: flex; gap: 6px; align-items: center;
+}
+.project-bar select {
+  padding: 6px 10px; border: 1px solid rgba(255,255,255,0.2); border-radius: 6px;
+  background: rgba(255,255,255,0.1); color: #fff; font-size: 12px; font-family: inherit;
+  max-width: 160px;
+}
+.project-bar select option { color: #333; background: #fff; }
+
+/* 드래그 편집 모드 */
+.drag-toggle {
+  display: flex; align-items: center; gap: 6px;
+}
+.drag-toggle label { font-size: 11px; color: #666; cursor: pointer; }
+.drag-toggle input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
 </style>
 </head>
 <body>
@@ -399,8 +487,14 @@ body {
     상세페이지 빌더
   </div>
   <div class="header-actions">
+    <div class="project-bar">
+      <select id="projectSelect" onchange="loadProject(this.value)">
+        <option value="">-- 프로젝트 --</option>
+      </select>
+      <button class="btn btn-ghost" onclick="saveProjectModal()" style="padding:6px 12px;font-size:11px;">저장</button>
+    </div>
     <button class="btn btn-ghost" onclick="previewPage()">미리보기 새 탭</button>
-    <button class="btn btn-success" onclick="downloadHTML()">⬇ HTML 다운로드</button>
+    <button class="btn btn-success" onclick="downloadHTML()">HTML 다운로드</button>
   </div>
 </div>
 
@@ -420,6 +514,18 @@ body {
 
       <!-- ════ TAB 1: 기본정보 ════ -->
       <div class="tab-panel active" id="tab-basic">
+
+        <!-- AI 자동 조사 패널 -->
+        <div class="research-panel">
+          <div class="rp-title">AI 자동 조사</div>
+          <div class="rp-row">
+            <input type="text" id="researchInput" placeholder="상품명 또는 URL 입력 (예: 다이슨 에어랩)" onkeydown="if(event.key==='Enter') doResearch()">
+            <button class="btn-ai" id="btnResearch" onclick="doResearch()">조사</button>
+          </div>
+          <button class="btn-ai-copy" id="btnAiCopy" onclick="doAiCopy()">AI 카피라이팅 생성</button>
+          <div id="aiStatus"></div>
+        </div>
+
         <div class="form-section">
           <div class="form-section-title">제품 기본 정보</div>
           <div class="field">
@@ -748,12 +854,16 @@ Mi Home 앱으로 언제 어디서나 쾌적한 실내를 유지하세요.</text
     <div class="preview-toolbar">
       <span class="p-label">미리보기</span>
       <div style="display:flex;align-items:center;gap:12px;">
+        <div class="drag-toggle">
+          <input type="checkbox" id="dragMode" onchange="toggleDragMode(this.checked)">
+          <label for="dragMode">드래그 편집</label>
+        </div>
         <div class="preview-scale">
           <button class="scale-btn active" onclick="setPreviewWidth('100%', this)">데스크탑</button>
           <button class="scale-btn" onclick="setPreviewWidth('768px', this)">태블릿</button>
           <button class="scale-btn" onclick="setPreviewWidth('390px', this)">모바일</button>
         </div>
-        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="refreshPreview()">🔄 새로고침</button>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="refreshPreview()">새로고침</button>
       </div>
     </div>
     <div class="preview-frame" id="previewFrame">
@@ -764,6 +874,21 @@ Mi Home 앱으로 언제 어디서나 쾌적한 실내를 유지하세요.</text
 
 <!-- 토스트 -->
 <div class="toast" id="toast"></div>
+
+<!-- 프로젝트 저장 모달 -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal">
+    <h3>프로젝트 저장</h3>
+    <div class="field">
+      <label>프로젝트 이름</label>
+      <input type="text" id="projectName" placeholder="예: 샤오미 온풍기 상세페이지">
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-cancel" onclick="closeModal('saveModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveProject()">저장</button>
+    </div>
+  </div>
+</div>
 
 <script>
 // ══════════════════════════════════════════════════
@@ -1492,12 +1617,450 @@ function showToast(msg) {
 // ══════════════════════════════════════════════════
 //  초기화
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+//  API 기본 설정
+// ══════════════════════════════════════════════════
+const API_BASE = window.location.origin + '/api';
+
+// ══════════════════════════════════════════════════
+//  자동 조사
+// ══════════════════════════════════════════════════
+async function doResearch() {
+  const input = document.getElementById('researchInput').value.trim();
+  if (!input) { showToast('상품명 또는 URL을 입력하세요'); return; }
+
+  const btn = document.getElementById('btnResearch');
+  const status = document.getElementById('aiStatus');
+  btn.disabled = true;
+  status.innerHTML = '<div class="ai-loading"><div class="spinner"></div>AI가 제품 정보를 조사하고 있습니다...</div>';
+
+  try {
+    const isUrl = input.startsWith('http://') || input.startsWith('https://');
+    const endpoint = isUrl ? '/api/research/url' : '/api/research/name';
+    const body = isUrl ? { url: input } : { productName: input };
+
+    const res = await fetch(API_BASE.replace('/api','') + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+
+    applyResearchData(result.data);
+    status.innerHTML = '<div style="color:#22c55e;font-size:12px;padding:8px;">조사 완료! 폼에 자동 입력되었습니다.</div>';
+    showToast('AI 조사 완료!');
+  } catch (e) {
+    status.innerHTML = `<div style="color:#ef4444;font-size:12px;padding:8px;">오류: ${e.message}</div>`;
+    showToast('조사 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function applyResearchData(d) {
+  if (!d) return;
+  // 기본 정보
+  if (d.brand) document.getElementById('brand').value = d.brand;
+  if (d.productName) document.getElementById('productName').value = d.productName;
+  if (d.modelEn) document.getElementById('modelEn').value = d.modelEn;
+  if (d.heroSub) document.getElementById('heroSub').value = d.heroSub;
+  if (d.heroDesc) document.getElementById('heroDesc').value = d.heroDesc;
+  if (d.certs) document.getElementById('certs').value = d.certs.join(', ');
+  if (d.introHead) document.getElementById('introHead').value = d.introHead;
+  if (d.introDesc) document.getElementById('introDesc').value = d.introDesc;
+
+  // 빅 스탯
+  if (d.bigStats && d.bigStats.length > 0) {
+    defaultBigStats.length = 0;
+    d.bigStats.forEach(s => defaultBigStats.push(s));
+    renderBigStats();
+  }
+  if (d.statsHead) document.getElementById('statsHead').value = d.statsHead;
+  if (d.statsDesc) document.getElementById('statsDesc').value = d.statsDesc;
+
+  // 다크 섹션
+  if (d.darkSection) {
+    if (d.darkSection.tag) document.getElementById('darkTag').value = d.darkSection.tag;
+    if (d.darkSection.head) document.getElementById('darkHead').value = d.darkSection.head;
+    if (d.darkSection.desc) document.getElementById('darkDesc').value = d.darkSection.desc;
+    if (d.darkSection.display) document.getElementById('darkDisplay').value = d.darkSection.display;
+    if (d.darkSection.displaySub) document.getElementById('darkDisplaySub').value = d.darkSection.displaySub;
+  }
+
+  // 야간 모드
+  if (d.nightSection) {
+    if (d.nightSection.db) document.getElementById('nightDB').value = d.nightSection.db;
+    if (d.nightSection.head) document.getElementById('nightHead').value = d.nightSection.head;
+    if (d.nightSection.desc) document.getElementById('nightDesc').value = d.nightSection.desc;
+  }
+
+  // 앱 섹션
+  if (d.appSection) {
+    if (d.appSection.tag) document.getElementById('appTag').value = d.appSection.tag;
+    if (d.appSection.head) document.getElementById('appHead').value = d.appSection.head;
+    if (d.appSection.desc) document.getElementById('appDesc').value = d.appSection.desc;
+    if (d.appSection.features) document.getElementById('appFeatures').value = d.appSection.features.join('\n');
+  }
+
+  // 키 스펙
+  if (d.keySpecs && d.keySpecs.length > 0) {
+    defaultKeySpecs.length = 0;
+    d.keySpecs.forEach(s => defaultKeySpecs.push(s));
+    renderKeySpecs();
+  }
+
+  // 스펙 테이블
+  if (d.specTable && d.specTable.length > 0) {
+    defaultSpecTable.length = 0;
+    d.specTable.forEach(s => defaultSpecTable.push(s));
+    renderSpecTable();
+  }
+
+  // 기능 섹션
+  if (d.features && d.features.length > 0) {
+    defaultFeatureSections.length = 0;
+    const imgKeys = ['feat1', 'feat2', 'feat3', 'feat4'];
+    d.features.forEach((f, i) => {
+      defaultFeatureSections.push({
+        tag: f.tag || '',
+        imgKey: imgKeys[i % imgKeys.length],
+        reverse: i % 2 === 1,
+        head: f.head || '',
+        desc: f.desc || '',
+        icons: f.icons || [{ e: '⭐', t: '기능' }]
+      });
+    });
+    renderFeatureSections();
+  }
+
+  // 안전 카드
+  if (d.safetyCards && d.safetyCards.length > 0) {
+    defaultSafetyCards.length = 0;
+    d.safetyCards.forEach(c => defaultSafetyCards.push(c));
+    renderSafetyCards();
+  }
+
+  // 라이프스타일 태그
+  if (d.lifestyleTags) {
+    document.getElementById('lifestyleTags').value = d.lifestyleTags.join(', ');
+  }
+  if (d.disclaimer) document.getElementById('disclaimer').value = d.disclaimer;
+
+  refreshPreview();
+}
+
+// ══════════════════════════════════════════════════
+//  AI 카피라이팅
+// ══════════════════════════════════════════════════
+async function doAiCopy() {
+  const btn = document.getElementById('btnAiCopy');
+  const status = document.getElementById('aiStatus');
+  btn.disabled = true;
+  status.innerHTML = '<div class="ai-loading"><div class="spinner"></div>AI가 마케팅 카피를 작성하고 있습니다...</div>';
+
+  try {
+    const productData = collectData();
+    const res = await fetch(API_BASE.replace('/api','') + '/api/copy/generate', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ productData }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+
+    applyCopyData(result.data);
+    status.innerHTML = '<div style="color:#22c55e;font-size:12px;padding:8px;">카피 생성 완료! 폼에 적용되었습니다.</div>';
+    showToast('AI 카피라이팅 완료!');
+  } catch (e) {
+    status.innerHTML = `<div style="color:#ef4444;font-size:12px;padding:8px;">오류: ${e.message}</div>`;
+    showToast('카피 생성 실패: ' + e.message);
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+function applyCopyData(d) {
+  if (!d) return;
+  if (d.heroSub) document.getElementById('heroSub').value = d.heroSub;
+  if (d.heroDesc) document.getElementById('heroDesc').value = d.heroDesc;
+  if (d.introHead) document.getElementById('introHead').value = d.introHead;
+  if (d.introDesc) document.getElementById('introDesc').value = d.introDesc;
+  if (d.statsHead) document.getElementById('statsHead').value = d.statsHead;
+  if (d.statsDesc) document.getElementById('statsDesc').value = d.statsDesc;
+  if (d.darkTag) document.getElementById('darkTag').value = d.darkTag;
+  if (d.darkHead) document.getElementById('darkHead').value = d.darkHead;
+  if (d.darkDesc) document.getElementById('darkDesc').value = d.darkDesc;
+  if (d.nightHead) document.getElementById('nightHead').value = d.nightHead;
+  if (d.nightDesc) document.getElementById('nightDesc').value = d.nightDesc;
+  if (d.appTag) document.getElementById('appTag').value = d.appTag;
+  if (d.appHead) document.getElementById('appHead').value = d.appHead;
+  if (d.appDesc) document.getElementById('appDesc').value = d.appDesc;
+
+  // 기능 섹션 카피 업데이트
+  if (d.features && d.features.length > 0) {
+    d.features.forEach((f, i) => {
+      if (i < defaultFeatureSections.length) {
+        const tagEl = document.getElementById(`fs-tag-${i}`);
+        const headEl = document.getElementById(`fs-head-${i}`);
+        const descEl = document.getElementById(`fs-desc-${i}`);
+        if (tagEl && f.tag) tagEl.value = f.tag;
+        if (headEl && f.head) headEl.value = f.head;
+        if (descEl && f.desc) descEl.value = f.desc;
+      }
+    });
+  }
+
+  // 안전 카드 카피 업데이트
+  if (d.safetyCards && d.safetyCards.length > 0) {
+    d.safetyCards.forEach((c, i) => {
+      if (i < defaultSafetyCards.length) {
+        const titleEl = document.getElementById(`sc-title-${i}`);
+        const descEl = document.getElementById(`sc-desc-${i}`);
+        if (titleEl && c.title) titleEl.value = c.title;
+        if (descEl && c.desc) descEl.value = c.desc;
+      }
+    });
+  }
+
+  refreshPreview();
+}
+
+// ══════════════════════════════════════════════════
+//  프로젝트 저장/불러오기
+// ══════════════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+function saveProjectModal() {
+  const name = document.getElementById('brand').value + ' ' + document.getElementById('productName').value;
+  document.getElementById('projectName').value = name.trim() || '새 프로젝트';
+  openModal('saveModal');
+}
+
+async function saveProject() {
+  const name = document.getElementById('projectName').value.trim();
+  if (!name) { showToast('프로젝트 이름을 입력하세요'); return; }
+  try {
+    const data = collectData();
+    const res = await fetch(API_BASE.replace('/api','') + '/api/projects', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, data }),
+    });
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    closeModal('saveModal');
+    showToast('프로젝트 저장 완료!');
+    loadProjectList();
+  } catch (e) {
+    showToast('저장 실패: ' + e.message);
+  }
+}
+
+async function loadProjectList() {
+  try {
+    const res = await fetch(API_BASE.replace('/api','') + '/api/projects');
+    const result = await res.json();
+    if (!result.success) return;
+    const sel = document.getElementById('projectSelect');
+    sel.innerHTML = '<option value="">-- 프로젝트 --</option>';
+    result.data.forEach(p => {
+      sel.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+    });
+  } catch (e) {
+    console.log('프로젝트 목록 로드 실패:', e.message);
+  }
+}
+
+async function loadProject(id) {
+  if (!id) return;
+  try {
+    const res = await fetch(API_BASE.replace('/api','') + '/api/projects/' + id);
+    const result = await res.json();
+    if (!result.success) throw new Error(result.error);
+    applyResearchData(result.data.data);
+    showToast('프로젝트 불러오기 완료!');
+  } catch (e) {
+    showToast('불러오기 실패: ' + e.message);
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  드래그 편집 모드
+// ══════════════════════════════════════════════════
+let dragModeEnabled = false;
+
+function toggleDragMode(enabled) {
+  dragModeEnabled = enabled;
+  const iframe = document.getElementById('previewIframe');
+  if (enabled) {
+    injectDragScript(iframe);
+    showToast('드래그 편집 모드 ON — 텍스트를 클릭하고 드래그하여 위치를 변경하세요');
+  } else {
+    removeDragScript(iframe);
+    showToast('드래그 편집 모드 OFF');
+  }
+}
+
+function injectDragScript(iframe) {
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    if (doc.getElementById('drag-style')) return;
+
+    const style = doc.createElement('style');
+    style.id = 'drag-style';
+    style.textContent = `
+      .drag-editable {
+        cursor: move !important;
+        outline: 2px dashed rgba(255,105,0,0.4) !important;
+        outline-offset: 4px;
+        position: relative !important;
+        transition: outline-color 0.15s;
+      }
+      .drag-editable:hover {
+        outline-color: rgba(255,105,0,0.8) !important;
+      }
+      .drag-editable.dragging {
+        opacity: 0.7 !important;
+        outline-color: #FF6900 !important;
+        z-index: 9999 !important;
+      }
+      .drag-handle {
+        position: absolute; top: -28px; left: 0; background: #FF6900; color: #fff;
+        font-size: 10px; padding: 3px 8px; border-radius: 4px; pointer-events: none;
+        white-space: nowrap; z-index: 10000;
+      }
+      .drop-indicator {
+        height: 3px; background: #FF6900; border-radius: 2px; margin: 4px 0;
+        animation: pulse 0.8s ease-in-out infinite alternate;
+      }
+      @keyframes pulse { from { opacity: 0.4; } to { opacity: 1; } }
+    `;
+    doc.head.appendChild(style);
+
+    const script = doc.createElement('script');
+    script.id = 'drag-script';
+    script.textContent = `
+      (function() {
+        const editables = doc_querySelectorAll();
+        let dragEl = null, placeholder = null, startY = 0;
+
+        function doc_querySelectorAll() {
+          return document.querySelectorAll('section, .section > .inner > *, .feature-split .inner > *, .safety-cards > *, .stats-row > *, .specs-bar .inner > *');
+        }
+
+        function initDrag() {
+          document.querySelectorAll('.section').forEach(sec => {
+            sec.classList.add('drag-editable');
+            sec.setAttribute('draggable', 'true');
+
+            sec.addEventListener('dragstart', function(e) {
+              dragEl = this;
+              this.classList.add('dragging');
+              e.dataTransfer.effectAllowed = 'move';
+              e.dataTransfer.setData('text/plain', '');
+            });
+
+            sec.addEventListener('dragend', function() {
+              this.classList.remove('dragging');
+              document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+              dragEl = null;
+            });
+
+            sec.addEventListener('dragover', function(e) {
+              e.preventDefault();
+              e.dataTransfer.dropEffect = 'move';
+              if (this === dragEl) return;
+              document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+              const rect = this.getBoundingClientRect();
+              const mid = rect.top + rect.height / 2;
+              const indicator = document.createElement('div');
+              indicator.className = 'drop-indicator';
+              if (e.clientY < mid) {
+                this.parentNode.insertBefore(indicator, this);
+              } else {
+                this.parentNode.insertBefore(indicator, this.nextSibling);
+              }
+            });
+
+            sec.addEventListener('drop', function(e) {
+              e.preventDefault();
+              if (!dragEl || this === dragEl) return;
+              document.querySelectorAll('.drop-indicator').forEach(el => el.remove());
+              const rect = this.getBoundingClientRect();
+              const mid = rect.top + rect.height / 2;
+              if (e.clientY < mid) {
+                this.parentNode.insertBefore(dragEl, this);
+              } else {
+                this.parentNode.insertBefore(dragEl, this.nextSibling);
+              }
+              window.parent.postMessage({ type: 'drag-reorder', message: '섹션 순서가 변경되었습니다' }, '*');
+            });
+          });
+        }
+
+        // 텍스트 인라인 편집
+        document.querySelectorAll('h1, h2, h3, p, .tag-pill, .spec-val, .spec-label, .stat-num, .stat-lbl, .stat-cap, .s-title, .s-desc, .display-temp, .db-display, .cert-badge').forEach(el => {
+          el.contentEditable = true;
+          el.style.cursor = 'text';
+          el.addEventListener('focus', function() {
+            this.style.outline = '2px solid #FF6900';
+            this.style.outlineOffset = '2px';
+            this.style.borderRadius = '4px';
+          });
+          el.addEventListener('blur', function() {
+            this.style.outline = 'none';
+          });
+        });
+
+        initDrag();
+      })();
+    `;
+    doc.body.appendChild(script);
+
+    // 메시지 수신
+    window.addEventListener('message', function(e) {
+      if (e.data && e.data.type === 'drag-reorder') {
+        showToast(e.data.message);
+      }
+    });
+  } catch (e) {
+    console.error('드래그 모드 주입 실패:', e);
+  }
+}
+
+function removeDragScript(iframe) {
+  try {
+    const doc = iframe.contentDocument || iframe.contentWindow.document;
+    const style = doc.getElementById('drag-style');
+    const script = doc.getElementById('drag-script');
+    if (style) style.remove();
+    if (script) script.remove();
+    doc.querySelectorAll('.drag-editable').forEach(el => {
+      el.classList.remove('drag-editable');
+      el.removeAttribute('draggable');
+    });
+    doc.querySelectorAll('[contenteditable]').forEach(el => {
+      el.contentEditable = false;
+      el.style.cursor = '';
+      el.style.outline = '';
+    });
+  } catch (e) {
+    console.error('드래그 모드 제거 실패:', e);
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  초기화
+// ══════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
   renderKeySpecs();
   renderBigStats();
   renderSafetyCards();
   renderFeatureSections();
   renderSpecTable();
+  loadProjectList();
 });
 </script>
 </body>
