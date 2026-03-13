@@ -1036,15 +1036,15 @@ function renderFeatureSections() {
       <div class="form-section-title" style="margin-top:0;">기능 섹션 ${i+1}</div>
       <div class="field">
         <label>섹션 이미지</label>
-        <div class="img-upload" id="upload-fs-${i}" style="min-height:70px;">
-          <input type="file" accept="image/*" onchange="handleImageUpload('feat${i+1}', this)">
+        <div class="img-upload" id="upload-feat${i+1}" style="min-height:70px;">
+          <input type="file" accept="image/*" onchange="handleFeatureImage(${i}, this)">
           <div class="img-upload-placeholder" style="${hasImg?'display:none':''}">
             <div class="up-icon" style="font-size:18px;">🖼</div>
             <div class="up-text" style="font-size:10px;">기능${i+1} 이미지 업로드</div>
           </div>
-          <div class="img-upload-preview" id="preview-fs-${i}" style="${hasImg?'display:block':'display:none'}">
-            <img src="${hasImg||''}" alt="" style="height:80px;width:100%;object-fit:cover;">
-            <div class="img-label"><span style="font-size:9px;">feat${i+1}</span><span class="img-clear" style="font-size:9px;" onclick="clearFeatureImage(${i}, event)">✕ 제거</span></div>
+          <div class="img-upload-preview" id="preview-feat${i+1}" style="${hasImg?'display:block':'display:none'}">
+            <img id="img-feat${i+1}" src="${hasImg||''}" alt="" style="height:80px;width:100%;object-fit:cover;">
+            <div class="img-label"><span id="name-feat${i+1}" style="font-size:9px;">feat${i+1}</span><span class="img-clear" style="font-size:9px;" onclick="clearFeatureImage(${i}, event)">✕ 제거</span></div>
           </div>
         </div>
       </div>
@@ -1063,10 +1063,33 @@ function renderFeatureSections() {
     </div>`;
   });
 }
+function handleFeatureImage(i, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const key = `feat${i+1}`;
+  const reader = new FileReader();
+  reader.onload = e => {
+    images[key] = e.target.result;
+    const prev = document.getElementById('preview-' + key);
+    const img = document.getElementById('img-' + key);
+    const placeholder = document.querySelector('#upload-' + key + ' .img-upload-placeholder');
+    if (prev && img) {
+      img.src = e.target.result;
+      prev.style.display = 'block';
+      if (placeholder) placeholder.style.display = 'none';
+    }
+    showToast('기능' + (i+1) + ' 이미지 업로드 완료');
+  };
+  reader.readAsDataURL(file);
+}
 function clearFeatureImage(i, e) {
   e.stopPropagation();
-  delete images[`feat${i+1}`];
-  renderFeatureSections();
+  const key = `feat${i+1}`;
+  delete images[key];
+  const prev = document.getElementById('preview-' + key);
+  const placeholder = document.querySelector('#upload-' + key + ' .img-upload-placeholder');
+  if (prev) prev.style.display = 'none';
+  if (placeholder) placeholder.style.display = '';
 }
 function addFeatureSection() {
   const nextIdx = defaultFeatureSections.length;
