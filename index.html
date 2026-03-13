@@ -1,0 +1,1504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상세페이지 빌더</title>
+<style>
+/* ── 전체 레이아웃 ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --accent: #FF6900;
+  --bg: #f4f5f7;
+  --panel: #ffffff;
+  --border: #e8e8e8;
+  --text: #1a1a1a;
+  --muted: #999;
+  --sidebar-w: 420px;
+}
+body {
+  font-family: 'Apple SD Gothic Neo','Malgun Gothic',-apple-system,sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── 상단 헤더 ── */
+.header {
+  background: #111;
+  color: #fff;
+  padding: 0 24px;
+  height: 54px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  z-index: 100;
+}
+.header-title {
+  font-size: 15px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.header-title .logo {
+  background: var(--accent);
+  color: #fff;
+  width: 28px; height: 28px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+}
+.header-actions { display: flex; gap: 10px; align-items: center; }
+.btn {
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  transition: all 0.15s;
+}
+.btn-ghost { background: rgba(255,255,255,0.1); color: #fff; }
+.btn-ghost:hover { background: rgba(255,255,255,0.18); }
+.btn-primary { background: var(--accent); color: #fff; }
+.btn-primary:hover { background: #e55e00; }
+.btn-success { background: #22c55e; color: #fff; }
+.btn-success:hover { background: #16a34a; }
+
+/* ── 메인 영역 ── */
+.main {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── 좌측 사이드바 ── */
+.sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.sidebar-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.tab {
+  flex: 1;
+  padding: 12px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  color: var(--muted);
+  border-bottom: 2px solid transparent;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+.tab:hover:not(.active) { color: #555; }
+.sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+.sidebar-content::-webkit-scrollbar { width: 4px; }
+.sidebar-content::-webkit-scrollbar-thumb { background: #ddd; border-radius: 2px; }
+
+/* 탭 패널 */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* ── 폼 컴포넌트 ── */
+.form-section {
+  margin-bottom: 24px;
+}
+.form-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.field { margin-bottom: 12px; }
+.field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: #666;
+  margin-bottom: 5px;
+}
+.field input[type="text"],
+.field input[type="number"],
+.field textarea,
+.field select {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 12px;
+  font-family: inherit;
+  color: var(--text);
+  background: #fafafa;
+  transition: border-color 0.15s;
+  resize: vertical;
+}
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+.field textarea { min-height: 64px; }
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.field-row-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 8px;
+}
+
+/* 이미지 업로드 */
+.img-upload {
+  position: relative;
+  border: 1.5px dashed #ddd;
+  border-radius: 12px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  background: #fafafa;
+}
+.img-upload:hover { border-color: var(--accent); background: #fff8f5; }
+.img-upload input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+}
+.img-upload-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  gap: 6px;
+  min-height: 100px;
+  pointer-events: none;
+}
+.img-upload-placeholder .up-icon { font-size: 24px; }
+.img-upload-placeholder .up-text { font-size: 11px; color: var(--muted); text-align: center; }
+.img-upload-placeholder .up-sub { font-size: 10px; color: #bbb; }
+.img-upload-preview {
+  width: 100%;
+  display: none;
+  pointer-events: none;
+}
+.img-upload-preview img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+.img-upload-preview .img-label {
+  padding: 6px 10px;
+  font-size: 10px;
+  color: #888;
+  background: #f5f5f5;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.img-clear {
+  font-size: 10px;
+  color: #f44;
+  cursor: pointer;
+  pointer-events: all;
+  z-index: 10;
+  position: relative;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #fff;
+  border: 1px solid #fcc;
+}
+.img-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.img-label-tag {
+  font-size: 10px;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 5px;
+}
+
+/* 스펙 행 */
+.spec-row {
+  display: grid;
+  grid-template-columns: 60px 50px 1fr;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.spec-row input { text-align: center; }
+
+/* 동적 행 */
+.dynamic-item {
+  background: #fafafa;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  position: relative;
+}
+.dynamic-item .remove-btn {
+  position: absolute;
+  top: 8px; right: 8px;
+  background: none;
+  border: none;
+  color: #ccc;
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.dynamic-item .remove-btn:hover { color: #f44; background: #fff0f0; }
+.add-btn {
+  width: 100%;
+  padding: 8px;
+  border: 1.5px dashed #ddd;
+  border-radius: 8px;
+  background: none;
+  font-size: 12px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: inherit;
+}
+.add-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* 색상 피커 */
+.color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.color-row input[type="color"] {
+  width: 40px; height: 36px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 2px;
+  background: #fff;
+}
+.color-row .color-val {
+  font-size: 12px;
+  color: #666;
+  font-family: monospace;
+}
+.color-preset { display: flex; gap: 6px; margin-top: 8px; flex-wrap: wrap; }
+.color-dot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.15s;
+}
+.color-dot:hover { border-color: #333; }
+
+/* ── 우측 프리뷰 ── */
+.preview-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: #eaeaea;
+}
+.preview-toolbar {
+  background: var(--panel);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+.preview-toolbar .p-label { font-size: 12px; font-weight: 600; color: #666; }
+.preview-scale {
+  display: flex;
+  gap: 6px;
+}
+.scale-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: #fafafa;
+  cursor: pointer;
+  color: #666;
+  font-family: inherit;
+}
+.scale-btn.active { border-color: var(--accent); color: var(--accent); background: #fff8f5; }
+.preview-frame {
+  flex: 1;
+  overflow: hidden;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px;
+}
+.preview-frame iframe {
+  background: #fff;
+  border: none;
+  border-radius: 4px;
+  box-shadow: 0 4px 40px rgba(0,0,0,0.15);
+  transition: width 0.3s;
+}
+
+/* ── 토스트 알림 ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  background: #1a1a1a;
+  color: #fff;
+  padding: 12px 20px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s;
+  z-index: 999;
+  pointer-events: none;
+}
+.toast.show { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- 헤더 -->
+<div class="header">
+  <div class="header-title">
+    <div class="logo">P</div>
+    상세페이지 빌더
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost" onclick="previewPage()">미리보기 새 탭</button>
+    <button class="btn btn-success" onclick="downloadHTML()">⬇ HTML 다운로드</button>
+  </div>
+</div>
+
+<!-- 메인 -->
+<div class="main">
+
+  <!-- ── 좌측 패널 ── -->
+  <div class="sidebar">
+    <div class="sidebar-tabs">
+      <div class="tab active" onclick="switchTab('basic', this)">기본정보</div>
+      <div class="tab" onclick="switchTab('images', this)">이미지</div>
+      <div class="tab" onclick="switchTab('specs', this)">스펙·기능</div>
+      <div class="tab" onclick="switchTab('sections', this)">섹션</div>
+      <div class="tab" onclick="switchTab('design', this)">디자인</div>
+    </div>
+    <div class="sidebar-content">
+
+      <!-- ════ TAB 1: 기본정보 ════ -->
+      <div class="tab-panel active" id="tab-basic">
+        <div class="form-section">
+          <div class="form-section-title">제품 기본 정보</div>
+          <div class="field">
+            <label>브랜드명</label>
+            <input type="text" id="brand" value="Xiaomi" placeholder="예: Xiaomi, Samsung...">
+          </div>
+          <div class="field">
+            <label>제품명 (크게 표시)</label>
+            <input type="text" id="productName" value="스마트 온풍기 S Pro" placeholder="제품명을 입력하세요">
+          </div>
+          <div class="field">
+            <label>제품 모델명 (영문)</label>
+            <input type="text" id="modelEn" value="Smart Space Heater S Pro" placeholder="영문 모델명">
+          </div>
+          <div class="field">
+            <label>히어로 서브카피</label>
+            <input type="text" id="heroSub" value="강력한 온기, 스마트한 온도" placeholder="한 줄 슬로건">
+          </div>
+          <div class="field">
+            <label>히어로 설명 (2~3줄)</label>
+            <textarea id="heroDesc" rows="3">최신 PTC 세라믹 발열 기술로 3초 만에 따뜻함을 전달합니다.
+Mi Home 앱으로 언제 어디서나 쾌적한 실내를 유지하세요.</textarea>
+          </div>
+          <div class="field">
+            <label>인증 배지 (콤마로 구분)</label>
+            <input type="text" id="certs" value="KC 인증, 에너지소비효율 1등급, Mi Home 연동">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">인트로 섹션</div>
+          <div class="field">
+            <label>헤드카피 (줄바꿈 가능)</label>
+            <textarea id="introHead" rows="2">켜자마자 따뜻한
+공간이 펼쳐집니다</textarea>
+          </div>
+          <div class="field">
+            <label>설명 텍스트</label>
+            <textarea id="introDesc" rows="3">Xiaomi 스마트 온풍기 S Pro는 최신 PTC 세라믹 발열체를 탑재해 전원을 켠 후 단 3초 만에 온기를 전달합니다. AI 스마트 온도 유지 기능으로 에너지 낭비 없이 언제나 쾌적한 실내 환경을 만들어드립니다.</textarea>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">빅 스탯 섹션</div>
+          <div class="field">
+            <label>헤드카피</label>
+            <textarea id="statsHead" rows="2">켜는 순간부터 방 전체가
+따뜻해집니다</textarea>
+          </div>
+          <div class="field">
+            <label>설명</label>
+            <textarea id="statsDesc" rows="2">최대 2200W 출력으로 빠르게 실내 온도를 높이고, AI 알고리즘이 실시간으로 에너지 효율을 최적화합니다.</textarea>
+          </div>
+          <div id="bigStats">
+            <!-- 동적 스탯 블록 -->
+          </div>
+          <button class="add-btn" onclick="addBigStat()">+ 스탯 추가 (최대 3개)</button>
+        </div>
+      </div>
+
+      <!-- ════ TAB 2: 이미지 ════ -->
+      <div class="tab-panel" id="tab-images">
+        <div class="form-section">
+          <div class="form-section-title">히어로 섹션</div>
+          <div class="img-label-tag">제품 대표 이미지</div>
+          <div class="img-upload" id="upload-hero">
+            <input type="file" accept="image/*" onchange="handleImageUpload('hero', this)">
+            <div class="img-upload-placeholder">
+              <div class="up-icon">🖼</div>
+              <div class="up-text">제품 이미지 업로드</div>
+              <div class="up-sub">히어로 섹션에 크게 표시됩니다</div>
+            </div>
+            <div class="img-upload-preview" id="preview-hero">
+              <img id="img-hero" src="" alt="">
+              <div class="img-label">
+                <span id="name-hero">이미지</span>
+                <span class="img-clear" onclick="clearImage('hero', event)">✕ 제거</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">라이프스타일 / 인테리어 이미지</div>
+          <div class="img-upload" id="upload-lifestyle">
+            <input type="file" accept="image/*" onchange="handleImageUpload('lifestyle', this)">
+            <div class="img-upload-placeholder">
+              <div class="up-icon">🏠</div>
+              <div class="up-text">라이프스타일 이미지</div>
+              <div class="up-sub">실사용 환경 이미지 (가로 비율 권장)</div>
+            </div>
+            <div class="img-upload-preview" id="preview-lifestyle">
+              <img id="img-lifestyle" src="" alt="">
+              <div class="img-label">
+                <span id="name-lifestyle">이미지</span>
+                <span class="img-clear" onclick="clearImage('lifestyle', event)">✕ 제거</span>
+              </div>
+            </div>
+          </div>
+          <div class="field" style="margin-top:10px;">
+            <label>오버레이 태그 (콤마로 구분)</label>
+            <input type="text" id="lifestyleTags" value="🌡️ 빠른 난방, 🔇 저소음, 📱 스마트 제어, 🛡️ 안전 설계">
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">기능 섹션 이미지 (최대 4장)</div>
+          <div class="img-grid">
+            <div>
+              <div class="img-label-tag">기능 이미지 1</div>
+              <div class="img-upload" id="upload-feat1" style="min-height:80px;">
+                <input type="file" accept="image/*" onchange="handleImageUpload('feat1', this)">
+                <div class="img-upload-placeholder" style="padding:14px;">
+                  <div class="up-icon" style="font-size:18px;">📷</div>
+                  <div class="up-text" style="font-size:10px;">기능 1</div>
+                </div>
+                <div class="img-upload-preview" id="preview-feat1">
+                  <img id="img-feat1" src="" alt="" style="height:80px;">
+                  <div class="img-label"><span id="name-feat1" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat1', event)">✕</span></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="img-label-tag">기능 이미지 2</div>
+              <div class="img-upload" id="upload-feat2" style="min-height:80px;">
+                <input type="file" accept="image/*" onchange="handleImageUpload('feat2', this)">
+                <div class="img-upload-placeholder" style="padding:14px;">
+                  <div class="up-icon" style="font-size:18px;">📷</div>
+                  <div class="up-text" style="font-size:10px;">기능 2</div>
+                </div>
+                <div class="img-upload-preview" id="preview-feat2">
+                  <img id="img-feat2" src="" alt="" style="height:80px;">
+                  <div class="img-label"><span id="name-feat2" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat2', event)">✕</span></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="img-label-tag">기능 이미지 3</div>
+              <div class="img-upload" id="upload-feat3" style="min-height:80px;">
+                <input type="file" accept="image/*" onchange="handleImageUpload('feat3', this)">
+                <div class="img-upload-placeholder" style="padding:14px;">
+                  <div class="up-icon" style="font-size:18px;">📷</div>
+                  <div class="up-text" style="font-size:10px;">기능 3</div>
+                </div>
+                <div class="img-upload-preview" id="preview-feat3">
+                  <img id="img-feat3" src="" alt="" style="height:80px;">
+                  <div class="img-label"><span id="name-feat3" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat3', event)">✕</span></div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="img-label-tag">기능 이미지 4</div>
+              <div class="img-upload" id="upload-feat4" style="min-height:80px;">
+                <input type="file" accept="image/*" onchange="handleImageUpload('feat4', this)">
+                <div class="img-upload-placeholder" style="padding:14px;">
+                  <div class="up-icon" style="font-size:18px;">📷</div>
+                  <div class="up-text" style="font-size:10px;">기능 4</div>
+                </div>
+                <div class="img-upload-preview" id="preview-feat4">
+                  <img id="img-feat4" src="" alt="" style="height:80px;">
+                  <div class="img-label"><span id="name-feat4" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat4', event)">✕</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">야간·앱 섹션 이미지 (선택)</div>
+          <div class="img-upload" id="upload-night">
+            <input type="file" accept="image/*" onchange="handleImageUpload('night', this)">
+            <div class="img-upload-placeholder">
+              <div class="up-icon">🌙</div>
+              <div class="up-text">야간 또는 앱 UI 이미지</div>
+            </div>
+            <div class="img-upload-preview" id="preview-night">
+              <img id="img-night" src="" alt="">
+              <div class="img-label"><span id="name-night">이미지</span><span class="img-clear" onclick="clearImage('night', event)">✕ 제거</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ TAB 3: 스펙·기능 ════ -->
+      <div class="tab-panel" id="tab-specs">
+        <div class="form-section">
+          <div class="form-section-title">핵심 스펙 바 (4개)</div>
+          <div style="display:grid;grid-template-columns:60px 54px 1fr;gap:4px;margin-bottom:6px;padding:0 2px;">
+            <span style="font-size:10px;color:#aaa;text-align:center;">수치</span>
+            <span style="font-size:10px;color:#aaa;text-align:center;">단위</span>
+            <span style="font-size:10px;color:#aaa;">설명</span>
+          </div>
+          <div id="keySpecs"></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">안전 카드 (최대 6개)</div>
+          <div id="safetyCards"></div>
+          <button class="add-btn" onclick="addSafetyCard()">+ 안전 카드 추가</button>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">앱 제어 섹션</div>
+          <div class="field">
+            <label>태그</label>
+            <input type="text" id="appTag" value="Mi Home / Xiaomi Home 앱">
+          </div>
+          <div class="field">
+            <label>헤드카피</label>
+            <textarea id="appHead" rows="2">언제 어디서나,
+스마트하게 제어</textarea>
+          </div>
+          <div class="field">
+            <label>설명</label>
+            <textarea id="appDesc" rows="3">앱으로 기기를 활성화하면 집에 도착하기 전부터 따뜻한 공간을 준비할 수 있습니다. Google Assistant, Amazon Alexa 음성 명령도 지원합니다.</textarea>
+          </div>
+          <div class="field">
+            <label>앱 기능 목록 (한 줄에 하나)</label>
+            <textarea id="appFeatures" rows="5">원격 전원 제어 및 온도 조절
+예약 타이머 설정 (최대 24시간)
+실시간 에너지 사용량 모니터링
+어린이 보호 잠금 원격 설정
+음성 명령 지원 (Google / Alexa)</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ TAB 4: 섹션 ════ -->
+      <div class="tab-panel" id="tab-sections">
+        <div class="form-section">
+          <div class="form-section-title">다크 섹션 (강조 기능)</div>
+          <div class="field"><label>태그</label><input type="text" id="darkTag" value="AI 스마트 온도 유지"></div>
+          <div class="field"><label>헤드카피</label><textarea id="darkHead" rows="2">설정하면 알아서 유지되는
+정밀한 온도 제어</textarea></div>
+          <div class="field"><label>설명</label><textarea id="darkDesc" rows="3">내장 고정밀 NTC 온도 센서가 실내 온도를 실시간 모니터링합니다. AI 알고리즘이 자동으로 발열량을 조절해 설정 온도를 ±0.5°C 오차 범위 내로 유지합니다.</textarea></div>
+          <div class="field"><label>디스플레이 수치 (예: 22°C)</label><input type="text" id="darkDisplay" value="22°C"></div>
+          <div class="field"><label>디스플레이 부제</label><input type="text" id="darkDisplaySub" value="현재 실내 온도"></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">기능 섹션 (이미지 + 텍스트)</div>
+          <div id="featureSections"></div>
+          <button class="add-btn" onclick="addFeatureSection()">+ 기능 섹션 추가</button>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">야간 모드 / 저소음 섹션</div>
+          <div class="field"><label>소음 수치 (예: 38)</label><input type="text" id="nightDB" value="38"></div>
+          <div class="field"><label>헤드카피</label><textarea id="nightHead" rows="2">38dB(A) 저소음 야간 모드</textarea></div>
+          <div class="field"><label>설명</label><textarea id="nightDesc" rows="3">야간 모드로 설정하면 팬 속도를 최저로 줄여 도서관보다 조용하게 작동합니다. 수면을 방해하지 않으면서도 따뜻한 환경을 밤새 유지합니다.</textarea></div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">제품 사양 테이블</div>
+          <div id="specTable"></div>
+          <button class="add-btn" onclick="addSpecRow()">+ 항목 추가</button>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">주석 / 면책 문구</div>
+          <div class="field">
+            <textarea id="disclaimer" rows="4">* 측정값은 특정 환경 조건에 따라 달라질 수 있으며 근사치입니다.
+* 제품 사양은 사전 예고 없이 변경될 수 있습니다.
+* 인증 정보는 해당 지역에 따라 다를 수 있습니다.</textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- ════ TAB 5: 디자인 ════ -->
+      <div class="tab-panel" id="tab-design">
+        <div class="form-section">
+          <div class="form-section-title">강조 색상</div>
+          <div class="color-row">
+            <input type="color" id="accentColor" value="#FF6900" oninput="updateColorVal(this)">
+            <span class="color-val" id="colorVal">#FF6900</span>
+          </div>
+          <div class="color-preset">
+            <div class="color-dot" style="background:#FF6900;" onclick="setColor('#FF6900')" title="Xiaomi 오렌지"></div>
+            <div class="color-dot" style="background:#1428A0;" onclick="setColor('#1428A0')" title="삼성 블루"></div>
+            <div class="color-dot" style="background:#000000;" onclick="setColor('#000000')" title="블랙"></div>
+            <div class="color-dot" style="background:#0070c0;" onclick="setColor('#0070c0')" title="블루"></div>
+            <div class="color-dot" style="background:#c8102e;" onclick="setColor('#c8102e')" title="레드"></div>
+            <div class="color-dot" style="background:#00b14f;" onclick="setColor('#00b14f')" title="그린"></div>
+            <div class="color-dot" style="background:#7b2d8b;" onclick="setColor('#7b2d8b')" title="퍼플"></div>
+            <div class="color-dot" style="background:#f5a623;" onclick="setColor('#f5a623')" title="골드"></div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">히어로 배경</div>
+          <div class="field">
+            <label>배경 타입</label>
+            <select id="heroBg">
+              <option value="light">라이트 그레이</option>
+              <option value="dark">다크</option>
+              <option value="gradient">그라데이션</option>
+              <option value="white">순백색</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">라이프스타일 섹션 배경</div>
+          <div class="field">
+            <label>배경 색상 (이미지 없을 때)</label>
+            <div class="color-row">
+              <input type="color" id="lifestyleBg" value="#f2f0ed" oninput="">
+              <span style="font-size:12px;color:#666;">이미지가 없을 때 사용</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">페이지 최대 너비</div>
+          <div class="field">
+            <label>콘텐츠 최대 너비 (px)</label>
+            <input type="number" id="maxWidth" value="900" min="600" max="1400">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 우측 프리뷰 ── -->
+  <div class="preview-area">
+    <div class="preview-toolbar">
+      <span class="p-label">미리보기</span>
+      <div style="display:flex;align-items:center;gap:12px;">
+        <div class="preview-scale">
+          <button class="scale-btn active" onclick="setPreviewWidth('100%', this)">데스크탑</button>
+          <button class="scale-btn" onclick="setPreviewWidth('768px', this)">태블릿</button>
+          <button class="scale-btn" onclick="setPreviewWidth('390px', this)">모바일</button>
+        </div>
+        <button class="btn btn-primary" style="font-size:12px;padding:6px 14px;" onclick="refreshPreview()">🔄 새로고침</button>
+      </div>
+    </div>
+    <div class="preview-frame" id="previewFrame">
+      <iframe id="previewIframe" style="width:100%;height:100%;" srcdoc="<div style='display:flex;height:100vh;align-items:center;justify-content:center;font-family:sans-serif;color:#999;flex-direction:column;gap:12px;'><div style='font-size:32px;'>🖼</div><div style='font-size:14px;'>새로고침 버튼을 눌러 미리보기를 확인하세요</div></div>"></iframe>
+    </div>
+  </div>
+</div>
+
+<!-- 토스트 -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════════════
+//  상태 저장
+// ══════════════════════════════════════════════════
+const images = {}; // key → base64 data URL
+
+// 초기 데이터
+const defaultKeySpecs = [
+  { val: '3', unit: '초', label: '빠른 난방 시작' },
+  { val: '20', unit: '㎡', label: '최대 난방 면적' },
+  { val: '38', unit: 'dB', label: '야간 저소음 모드' },
+  { val: '±0.5', unit: '°C', label: '정밀 온도 제어' },
+];
+const defaultBigStats = [
+  { label: '최대 출력', val: '2,200', unit: 'W', caption: '강력한 PTC 세라믹 발열' },
+  { label: '최대 면적', val: '20', unit: '㎡', caption: '넓은 공간도 빠르게' },
+  { label: '온도 범위', val: '5~32', unit: '°C', caption: '1°C 단위 정밀 설정' },
+];
+const defaultSafetyCards = [
+  { icon: '🛡️', title: '과열 방지', desc: '내부 온도가 한계를 초과하면 즉시 전원을 차단합니다.' },
+  { icon: '⬇️', title: '전도 감지 차단', desc: '넘어지는 순간 자동으로 전원을 끄는 전도 감지 센서.' },
+  { icon: '🌡️', title: 'PTC 자기 제어', desc: '발열체가 스스로 온도를 조절해 물리적 과열 불가.' },
+  { icon: '🔒', title: '어린이 잠금', desc: '버튼 오조작을 방지하는 어린이 잠금 기능.' },
+];
+const defaultFeatureSections = [
+  {
+    tag: 'PTC 세라믹 발열 기술', imgKey: 'feat1', reverse: false,
+    head: '켜자마자 3초,\n강력한 온기의 시작',
+    desc: '차세대 PTC 세라믹 발열체를 탑재했습니다. 일반 발열체보다 훨씬 빠르게 가열되며, 스스로 온도를 제어하는 자기 조절 특성으로 과열 위험을 원천 차단합니다.',
+    icons: [{ e: '⚡', t: '빠른 발열' }, { e: '🌡️', t: '자기 조절' }, { e: '🔥', t: '고효율' }, { e: '💚', t: '에너지 절약' }]
+  },
+  {
+    tag: '전방향 온풍 순환', imgKey: 'feat2', reverse: true,
+    head: '360° 사방으로\n고르게 퍼지는 온기',
+    desc: '상단 출풍구를 통해 따뜻한 공기를 위쪽으로 분사하면, 자연 대류 원리에 의해 공기가 360° 전방향으로 고르게 순환됩니다.',
+    icons: [{ e: '🔄', t: '360° 순환' }, { e: '📐', t: '균일 온도' }, { e: '🏠', t: '전공간 난방' }, { e: '⚖️', t: '에너지 밸런스' }]
+  },
+];
+const defaultSpecTable = [
+  ['정격 전압', '220V ~ 50/60Hz'],
+  ['소비 전력', '400W / 1200W / 2200W (3단계)'],
+  ['발열 방식', 'PTC 세라믹 발열 기술'],
+  ['유효 난방 면적', '최대 20㎡'],
+  ['설정 온도 범위', '5°C ~ 32°C (1°C 단위)'],
+  ['소음', '야간 모드 ≤ 38dB(A) / 일반 모드 ≤ 52dB(A)'],
+  ['연결', 'Wi-Fi 2.4GHz (802.11 b/g/n)'],
+  ['앱 지원', 'Mi Home / Xiaomi Home'],
+  ['제품 크기', '240 × 240 × 620mm'],
+  ['무게', '약 3.8kg'],
+];
+
+// ══════════════════════════════════════════════════
+//  탭 전환
+// ══════════════════════════════════════════════════
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ══════════════════════════════════════════════════
+//  이미지 업로드
+// ══════════════════════════════════════════════════
+function handleImageUpload(key, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    images[key] = e.target.result;
+    const prev = document.getElementById('preview-' + key);
+    const img = document.getElementById('img-' + key);
+    const nameEl = document.getElementById('name-' + key);
+    if (prev && img) {
+      img.src = e.target.result;
+      prev.style.display = 'block';
+      document.querySelector('#upload-' + key + ' .img-upload-placeholder').style.display = 'none';
+      if (nameEl) nameEl.textContent = file.name.length > 20 ? file.name.slice(0,20)+'...' : file.name;
+    }
+    showToast('이미지 업로드 완료: ' + key);
+  };
+  reader.readAsDataURL(file);
+}
+function clearImage(key, e) {
+  e.stopPropagation();
+  delete images[key];
+  const prev = document.getElementById('preview-' + key);
+  const img = document.getElementById('img-' + key);
+  if (prev && img) {
+    img.src = '';
+    prev.style.display = 'none';
+    document.querySelector('#upload-' + key + ' .img-upload-placeholder').style.display = 'flex';
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  동적 폼 렌더링
+// ══════════════════════════════════════════════════
+function renderKeySpecs() {
+  const container = document.getElementById('keySpecs');
+  container.innerHTML = '';
+  defaultKeySpecs.forEach((s, i) => {
+    container.innerHTML += `
+    <div class="spec-row">
+      <input type="text" id="spec-val-${i}" value="${s.val}" placeholder="값">
+      <input type="text" id="spec-unit-${i}" value="${s.unit}" placeholder="단위">
+      <input type="text" id="spec-label-${i}" value="${s.label}" placeholder="설명">
+    </div>`;
+  });
+}
+
+function renderBigStats() {
+  const container = document.getElementById('bigStats');
+  container.innerHTML = '';
+  defaultBigStats.forEach((s, i) => {
+    container.innerHTML += `
+    <div class="dynamic-item">
+      <button class="remove-btn" onclick="removeBigStat(${i})">✕</button>
+      <div class="field-row">
+        <div class="field"><label>라벨</label><input type="text" id="bs-label-${i}" value="${s.label}"></div>
+        <div class="field"><label>단위</label><input type="text" id="bs-unit-${i}" value="${s.unit}"></div>
+      </div>
+      <div class="field-row">
+        <div class="field"><label>수치</label><input type="text" id="bs-val-${i}" value="${s.val}"></div>
+        <div class="field"><label>부가설명</label><input type="text" id="bs-cap-${i}" value="${s.caption}"></div>
+      </div>
+    </div>`;
+  });
+}
+function addBigStat() {
+  if (defaultBigStats.length >= 3) { showToast('스탯은 최대 3개까지 추가 가능합니다.'); return; }
+  defaultBigStats.push({ label: '새 스탯', val: '0', unit: '', caption: '설명' });
+  renderBigStats();
+}
+function removeBigStat(i) {
+  defaultBigStats.splice(i, 1);
+  renderBigStats();
+}
+
+function renderSafetyCards() {
+  const container = document.getElementById('safetyCards');
+  container.innerHTML = '';
+  defaultSafetyCards.forEach((c, i) => {
+    container.innerHTML += `
+    <div class="dynamic-item">
+      <button class="remove-btn" onclick="removeSafetyCard(${i})">✕</button>
+      <div class="field-row">
+        <div class="field"><label>이모지</label><input type="text" id="sc-icon-${i}" value="${c.icon}"></div>
+        <div class="field"><label>제목</label><input type="text" id="sc-title-${i}" value="${c.title}"></div>
+      </div>
+      <div class="field"><label>설명</label><input type="text" id="sc-desc-${i}" value="${c.desc}"></div>
+    </div>`;
+  });
+}
+function addSafetyCard() {
+  if (defaultSafetyCards.length >= 6) { showToast('카드는 최대 6개입니다.'); return; }
+  defaultSafetyCards.push({ icon: '✅', title: '새 기능', desc: '설명을 입력하세요.' });
+  renderSafetyCards();
+}
+function removeSafetyCard(i) { defaultSafetyCards.splice(i, 1); renderSafetyCards(); }
+
+function renderFeatureSections() {
+  const container = document.getElementById('featureSections');
+  container.innerHTML = '';
+  defaultFeatureSections.forEach((f, i) => {
+    const imgKeys = ['feat1','feat2','feat3','feat4'];
+    const opts = imgKeys.map(k => `<option value="${k}" ${f.imgKey===k?'selected':''}>${k}</option>`).join('');
+    container.innerHTML += `
+    <div class="dynamic-item">
+      <button class="remove-btn" onclick="removeFeatureSection(${i})">✕</button>
+      <div class="form-section-title" style="margin-top:0;">섹션 ${i+1}</div>
+      <div class="field"><label>태그 텍스트</label><input type="text" id="fs-tag-${i}" value="${f.tag}"></div>
+      <div class="field-row">
+        <div class="field"><label>이미지</label>
+          <select id="fs-img-${i}">${opts}</select>
+        </div>
+        <div class="field"><label>이미지 위치</label>
+          <select id="fs-reverse-${i}">
+            <option value="0" ${!f.reverse?'selected':''}>왼쪽</option>
+            <option value="1" ${f.reverse?'selected':''}>오른쪽</option>
+          </select>
+        </div>
+      </div>
+      <div class="field"><label>헤드카피 (줄바꿈 가능)</label><textarea id="fs-head-${i}" rows="2">${f.head}</textarea></div>
+      <div class="field"><label>설명</label><textarea id="fs-desc-${i}" rows="3">${f.desc}</textarea></div>
+      <div class="field"><label>아이콘 (이모지,텍스트 / 콤마구분, 4개)</label>
+        <input type="text" id="fs-icons-${i}" value="${f.icons.map(ic=>ic.e+','+ic.t).join('|')}">
+      </div>
+    </div>`;
+  });
+}
+function addFeatureSection() {
+  defaultFeatureSections.push({
+    tag: '새 기능', imgKey: 'feat3', reverse: false,
+    head: '기능 제목을\n입력하세요',
+    desc: '기능 설명을 입력하세요.',
+    icons: [{ e: '⭐', t: '기능1' }, { e: '⭐', t: '기능2' }, { e: '⭐', t: '기능3' }, { e: '⭐', t: '기능4' }]
+  });
+  renderFeatureSections();
+}
+function removeFeatureSection(i) { defaultFeatureSections.splice(i, 1); renderFeatureSections(); }
+
+function renderSpecTable() {
+  const container = document.getElementById('specTable');
+  container.innerHTML = '';
+  defaultSpecTable.forEach((row, i) => {
+    container.innerHTML += `
+    <div class="dynamic-item" style="padding:8px 10px;">
+      <button class="remove-btn" onclick="removeSpecRow(${i})">✕</button>
+      <div class="field-row">
+        <div class="field"><label style="font-size:10px;">항목</label><input type="text" id="st-key-${i}" value="${row[0]}"></div>
+        <div class="field"><label style="font-size:10px;">내용</label><input type="text" id="st-val-${i}" value="${row[1]}"></div>
+      </div>
+    </div>`;
+  });
+}
+function addSpecRow() {
+  defaultSpecTable.push(['항목명', '내용']);
+  renderSpecTable();
+}
+function removeSpecRow(i) { defaultSpecTable.splice(i, 1); renderSpecTable(); }
+
+// ══════════════════════════════════════════════════
+//  데이터 수집
+// ══════════════════════════════════════════════════
+function collectData() {
+  // key specs
+  const keySpecs = defaultKeySpecs.map((_, i) => ({
+    val: v(`spec-val-${i}`), unit: v(`spec-unit-${i}`), label: v(`spec-label-${i}`)
+  }));
+  // big stats
+  const bigStats = defaultBigStats.map((_, i) => ({
+    label: v(`bs-label-${i}`), val: v(`bs-val-${i}`), unit: v(`bs-unit-${i}`), caption: v(`bs-cap-${i}`)
+  }));
+  // safety
+  const safetyCards = defaultSafetyCards.map((_, i) => ({
+    icon: v(`sc-icon-${i}`), title: v(`sc-title-${i}`), desc: v(`sc-desc-${i}`)
+  }));
+  // features
+  const featureSections = defaultFeatureSections.map((_, i) => ({
+    tag: v(`fs-tag-${i}`),
+    imgKey: v(`fs-img-${i}`),
+    reverse: v(`fs-reverse-${i}`) === '1',
+    head: v(`fs-head-${i}`),
+    desc: v(`fs-desc-${i}`),
+    iconsRaw: v(`fs-icons-${i}`)
+  }));
+  // spec table
+  const specTable = defaultSpecTable.map((_, i) => [v(`st-key-${i}`), v(`st-val-${i}`)]);
+
+  return {
+    brand: v('brand'),
+    productName: v('productName'),
+    modelEn: v('modelEn'),
+    heroSub: v('heroSub'),
+    heroDesc: v('heroDesc'),
+    certs: v('certs').split(',').map(s => s.trim()).filter(Boolean),
+    introHead: v('introHead'),
+    introDesc: v('introDesc'),
+    statsHead: v('statsHead'),
+    statsDesc: v('statsDesc'),
+    darkTag: v('darkTag'),
+    darkHead: v('darkHead'),
+    darkDesc: v('darkDesc'),
+    darkDisplay: v('darkDisplay'),
+    darkDisplaySub: v('darkDisplaySub'),
+    nightDB: v('nightDB'),
+    nightHead: v('nightHead'),
+    nightDesc: v('nightDesc'),
+    appTag: v('appTag'),
+    appHead: v('appHead'),
+    appDesc: v('appDesc'),
+    appFeatures: v('appFeatures').split('\n').filter(Boolean),
+    lifestyleTags: v('lifestyleTags').split(',').map(s => s.trim()).filter(Boolean),
+    disclaimer: v('disclaimer'),
+    accent: v('accentColor') || '#FF6900',
+    heroBg: v('heroBg'),
+    lifestyleBgColor: document.getElementById('lifestyleBg').value,
+    maxWidth: v('maxWidth') || '900',
+    keySpecs, bigStats, safetyCards, featureSections, specTable,
+    images: { ...images }
+  };
+}
+function v(id) { const el = document.getElementById(id); return el ? el.value : ''; }
+
+// ══════════════════════════════════════════════════
+//  HTML 생성
+// ══════════════════════════════════════════════════
+function generateHTML(d) {
+  const acc = d.accent;
+  const mw = d.maxWidth + 'px';
+
+  // 히어로 배경
+  const heroBgMap = {
+    light: 'linear-gradient(160deg,#f7f7f7 0%,#ececec 100%)',
+    dark: 'linear-gradient(160deg,#1a1a1a 0%,#2d2d2d 100%)',
+    gradient: `linear-gradient(160deg,#fff8f5 0%,#ffe5d0 100%)`,
+    white: '#ffffff'
+  };
+  const heroBg = heroBgMap[d.heroBg] || heroBgMap.light;
+  const heroTextColor = d.heroBg === 'dark' ? '#fff' : '#111';
+  const heroSubColor = d.heroBg === 'dark' ? 'rgba(255,255,255,0.65)' : '#666';
+
+  // 스펙 바
+  const specsBarHTML = d.keySpecs.map((s, i) => `
+    ${i > 0 ? '<div class="spec-div"></div>' : ''}
+    <div class="spec-item">
+      <div class="spec-val">${esc(s.val)}<span class="spec-unit">${esc(s.unit)}</span></div>
+      <div class="spec-label">${esc(s.label)}</div>
+    </div>`).join('');
+
+  // 빅 스탯
+  const bigStatsHTML = d.bigStats.map(s => `
+    <div class="stat-block">
+      <div class="stat-lbl">${esc(s.label)}</div>
+      <div class="stat-num">${esc(s.val)}<sup>${esc(s.unit)}</sup></div>
+      <div class="stat-cap">${esc(s.caption)}</div>
+    </div>`).join('');
+
+  // 인증 배지
+  const certsHTML = d.certs.map(c => `<div class="cert-badge">${esc(c)}</div>`).join('');
+
+  // 라이프스타일 태그
+  const tagPositions = [
+    'top:20%;left:6%', 'top:60%;left:4%', 'top:18%;right:5%', 'top:62%;right:4%',
+    'top:40%;left:8%', 'top:38%;right:7%'
+  ];
+  const lifestyleTagsHTML = d.lifestyleTags.map((t, i) =>
+    `<div class="tag-bubble" style="${tagPositions[i] || 'top:30%;left:10%'}">${esc(t)}</div>`
+  ).join('');
+
+  // 라이프스타일 섹션
+  const lifestyleInner = d.images.lifestyle
+    ? `<img src="${d.images.lifestyle}" alt="lifestyle" style="width:100%;max-height:500px;object-fit:cover;display:block;">`
+    : `<div style="height:400px;background:${d.lifestyleBgColor};display:flex;align-items:center;justify-content:center;">
+        <div style="text-align:center;"><p style="font-size:13px;color:rgba(0,0,0,0.4);letter-spacing:2px;margin-bottom:10px;">LIFESTYLE</p>
+        <h3 style="font-size:32px;font-weight:700;color:rgba(0,0,0,0.6);">공간과 함께하는 제품</h3></div>
+       </div>`;
+
+  // 기능 섹션들
+  const featureSectionsHTML = d.featureSections.map((f, i) => {
+    const imgSrc = d.images[f.imgKey];
+    const imgHTML = imgSrc
+      ? `<img src="${imgSrc}" alt="feature" style="width:100%;border-radius:16px;display:block;">`
+      : `<div style="height:320px;background:linear-gradient(145deg,#1a1a2e,#0d0d1a);border-radius:16px;display:flex;align-items:center;justify-content:center;"><div style="font-size:60px;opacity:0.3;">📷</div></div>`;
+    const headHtml = f.head.replace(/\n/g, '<br>');
+    const descHtml = esc(f.desc);
+    const iconsHTML = (f.iconsRaw || '').split('|').map(pair => {
+      const [e, t] = pair.split(',');
+      return `<div class="feat-icon-item"><div class="icon-circle">${e||'⭐'}</div><span>${esc(t||'')}</span></div>`;
+    }).join('');
+
+    const imgWrap = `<div class="feat-img">${imgHTML}</div>`;
+    const textWrap = `<div class="feat-text">
+      <div class="tag-pill">${esc(f.tag)}</div>
+      <h2>${headHtml}</h2>
+      <p>${descHtml}</p>
+      <div class="feat-icons">${iconsHTML}</div>
+    </div>`;
+
+    const bg = i % 2 === 1 ? 'background:#f8f8f8;' : '';
+    const inner = f.reverse ? textWrap + imgWrap : imgWrap + textWrap;
+    return `<section class="section feature-split" style="${bg}"><div class="inner">${inner}</div></section>`;
+  }).join('');
+
+  // 안전 카드
+  const safetyCardsHTML = d.safetyCards.map(c => `
+    <div class="safety-card">
+      <div class="s-icon">${esc(c.icon)}</div>
+      <div class="s-title">${esc(c.title)}</div>
+      <div class="s-desc">${esc(c.desc)}</div>
+    </div>`).join('');
+
+  // 앱 기능 목록
+  const appFeaturesHTML = d.appFeatures.map(f =>
+    `<div class="app-feature-row"><div class="dot"></div><span>${esc(f)}</span></div>`
+  ).join('');
+
+  // 스펙 테이블
+  const specTableHTML = d.specTable.map(row =>
+    `<tr><td>${esc(row[0])}</td><td>${esc(row[1])}</td></tr>`
+  ).join('');
+
+  // 히어로 이미지
+  const heroImgHTML = d.images.hero
+    ? `<img src="${d.images.hero}" alt="product" style="max-width:340px;width:100%;margin:0 auto;display:block;">`
+    : `<svg viewBox="0 0 320 380" fill="none" xmlns="http://www.w3.org/2000/svg" style="max-width:300px;width:100%;margin:0 auto;display:block;">
+        <rect x="80" y="60" width="160" height="270" rx="28" fill="url(#hg)"/>
+        <rect x="96" y="90" width="128" height="180" rx="16" fill="rgba(0,0,0,0.04)"/>
+        ${[115,130,145,160,175,190,205,220,235,250].map(y=>`<line x1="96" y1="${y}" x2="224" y2="${y}" stroke="rgba(0,0,0,0.07)" stroke-width="1.2"/>`).join('')}
+        <rect x="110" y="286" width="100" height="30" rx="15" fill="rgba(0,0,0,0.06)"/>
+        <circle cx="160" cy="301" r="10" fill="${acc}" opacity="0.85"/>
+        <ellipse cx="160" cy="345" rx="80" ry="12" fill="rgba(0,0,0,0.08)"/>
+        <path d="M90 50 Q100 40 110 50 Q120 40 130 50" stroke="${acc}" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+        <path d="M130 45 Q140 35 150 45 Q160 35 170 45" stroke="${acc}" stroke-width="2" fill="none" opacity="0.5" stroke-linecap="round"/>
+        <path d="M170 50 Q180 40 190 50 Q200 40 210 50" stroke="${acc}" stroke-width="2" fill="none" opacity="0.4" stroke-linecap="round"/>
+        <defs><linearGradient id="hg" x1="80" y1="60" x2="240" y2="330" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#ffffff"/><stop offset="100%" stop-color="#e8e8e8"/></linearGradient></defs>
+      </svg>`;
+
+  const appHead = d.appHead.replace(/\n/g, '<br>');
+  const statsHead = d.statsHead.replace(/\n/g, '<br>');
+  const introHead = d.introHead.replace(/\n/g, '<br>');
+  const darkHead = d.darkHead.replace(/\n/g, '<br>');
+  const nightHead = d.nightHead.replace(/\n/g, '<br>');
+
+  return `<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${esc(d.brand)} ${esc(d.productName)}</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:'Apple SD Gothic Neo','Malgun Gothic',-apple-system,sans-serif;color:#1a1a1a;background:#fff;}
+:root{--acc:${acc};--mw:${mw};}
+.section{width:100%;overflow:hidden;}
+.inner{max-width:var(--mw);margin:0 auto;padding:0 20px;}
+.tag-pill{display:inline-block;background:#f3f3f3;color:#555;font-size:13px;padding:6px 18px;border-radius:999px;margin-bottom:20px;}
+
+/* HERO */
+.hero{background:${heroBg};padding:80px 20px 0;text-align:center;position:relative;overflow:hidden;}
+.hero::before{content:'';position:absolute;top:-120px;right:-180px;width:500px;height:500px;background:radial-gradient(circle,${acc}18 0%,transparent 70%);border-radius:50%;}
+.hero-label{font-size:12px;letter-spacing:3px;text-transform:uppercase;color:var(--acc);font-weight:600;margin-bottom:16px;}
+.hero h1{font-size:clamp(26px,5vw,46px);font-weight:700;line-height:1.25;color:${heroTextColor};margin-bottom:14px;}
+.hero h1 span{color:var(--acc);}
+.hero-sub{font-size:16px;color:${heroSubColor};margin-bottom:40px;line-height:1.6;}
+.cert-badges{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:28px;padding-bottom:36px;}
+.cert-badge{background:#fff;border:1px solid #e0e0e0;border-radius:8px;padding:7px 14px;font-size:11px;color:#777;font-weight:500;}
+
+/* SPECS BAR */
+.specs-bar{background:#fff;border-bottom:1px solid #f0f0f0;padding:34px 20px;}
+.specs-bar .inner{display:flex;justify-content:space-around;align-items:center;flex-wrap:wrap;gap:20px;}
+.spec-item{text-align:center;flex:1;min-width:110px;}
+.spec-val{font-size:26px;font-weight:700;color:#111;line-height:1.1;}
+.spec-unit{font-size:13px;font-weight:400;color:#888;}
+.spec-label{font-size:11px;color:#999;margin-top:4px;}
+.spec-div{width:1px;height:38px;background:#e8e8e8;}
+
+/* INTRO */
+.intro-text{padding:70px 20px;text-align:center;background:#fff;}
+.intro-text h2{font-size:clamp(20px,4vw,34px);font-weight:700;line-height:1.4;margin-bottom:16px;}
+.intro-text p{font-size:13px;color:#777;line-height:1.8;max-width:540px;margin:0 auto;}
+
+/* LIFESTYLE */
+.lifestyle-block{position:relative;width:100%;overflow:hidden;}
+.tag-bubble{position:absolute;background:rgba(255,255,255,0.92);backdrop-filter:blur(6px);border-radius:999px;padding:6px 14px;font-size:12px;font-weight:600;color:#333;white-space:nowrap;box-shadow:0 2px 12px rgba(0,0,0,0.1);}
+
+/* BIG STATS */
+.big-stats{padding:70px 20px;background:#fff;text-align:center;}
+.big-stats h2{font-size:clamp(20px,3.5vw,32px);font-weight:700;line-height:1.45;margin-bottom:12px;}
+.big-stats .sub-desc{font-size:13px;color:#888;max-width:520px;margin:0 auto 50px;line-height:1.7;}
+.stats-row{display:flex;justify-content:center;gap:56px;flex-wrap:wrap;margin-bottom:0;}
+.stat-block{text-align:center;}
+.stat-lbl{font-size:12px;color:#aaa;margin-bottom:4px;}
+.stat-num{font-size:clamp(34px,6vw,54px);font-weight:700;color:var(--acc);line-height:1;}
+.stat-num sup{font-size:50%;vertical-align:super;}
+.stat-cap{font-size:12px;color:#aaa;margin-top:6px;}
+
+/* DARK */
+.dark-section{background:#1a1c22;color:#fff;padding:80px 20px;text-align:center;}
+.dark-section h2{font-size:clamp(20px,4vw,34px);font-weight:700;line-height:1.4;margin-bottom:14px;}
+.dark-section p{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.8;max-width:520px;margin:0 auto 44px;}
+.tag-pill.white{background:rgba(255,255,255,0.15);color:#fff;}
+.display-mockup{width:240px;height:240px;border-radius:50%;background:linear-gradient(145deg,#2a2d35,#1a1c22);border:2px solid rgba(255,255,255,0.08);margin:0 auto 36px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 0 60px ${acc}26;}
+.display-temp{font-size:58px;font-weight:200;color:#fff;line-height:1;}
+.display-temp span{font-size:24px;font-weight:300;color:rgba(255,255,255,0.6);}
+.display-label{font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;letter-spacing:1px;}
+
+/* FEATURE SPLIT */
+.feature-split{padding:78px 20px;background:#fff;}
+.feature-split .inner{display:flex;align-items:center;gap:56px;flex-wrap:wrap;}
+.feat-img{flex:1;min-width:260px;border-radius:20px;overflow:hidden;background:#f5f5f5;}
+.feat-img img{width:100%;display:block;}
+.feat-text{flex:1;min-width:220px;}
+.feat-text h2{font-size:clamp(18px,3vw,28px);font-weight:700;line-height:1.4;margin-bottom:14px;}
+.feat-text p{font-size:13px;color:#777;line-height:1.8;margin-bottom:26px;}
+.feat-icons{display:flex;gap:18px;flex-wrap:wrap;}
+.feat-icon-item{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;color:#888;text-align:center;}
+.icon-circle{width:46px;height:46px;border-radius:50%;background:#f5f5f5;display:flex;align-items:center;justify-content:center;font-size:20px;}
+
+/* SAFETY */
+.safety-section{background:#111;padding:78px 20px;color:#fff;text-align:center;}
+.safety-section h2{font-size:clamp(20px,4vw,34px);font-weight:700;line-height:1.4;margin-bottom:12px;}
+.safety-section .desc{font-size:13px;color:rgba(255,255,255,0.5);line-height:1.8;max-width:500px;margin:0 auto 48px;}
+.safety-cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;max-width:760px;margin:0 auto;}
+.safety-card{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:26px 18px;text-align:center;}
+.s-icon{font-size:30px;margin-bottom:12px;}
+.s-title{font-size:13px;font-weight:600;margin-bottom:7px;}
+.s-desc{font-size:11px;color:rgba(255,255,255,0.45);line-height:1.6;}
+
+/* NIGHT */
+.night-section{background:linear-gradient(180deg,#0d1520 0%,#1a2535 100%);padding:88px 20px;color:#fff;text-align:center;}
+.night-section h2{font-size:clamp(20px,4vw,34px);font-weight:700;line-height:1.45;margin-bottom:14px;}
+.night-section p{font-size:13px;color:rgba(255,255,255,0.5);max-width:480px;margin:0 auto 48px;line-height:1.8;}
+.db-display{font-size:76px;font-weight:200;color:#fff;line-height:1;}
+.db-display span{font-size:28px;font-weight:300;color:rgba(255,255,255,0.5);}
+.db-caption{font-size:11px;color:rgba(255,255,255,0.4);margin-top:8px;letter-spacing:1px;}
+
+/* APP */
+.app-section{background:#f8f8f8;padding:78px 20px;}
+.app-section .inner{display:flex;align-items:center;gap:56px;flex-wrap:wrap;}
+.app-text{flex:1;min-width:220px;}
+.app-text .tag-pill{background:#fff1e6;color:var(--acc);}
+.app-text h2{font-size:clamp(18px,3vw,28px);font-weight:700;line-height:1.4;margin-bottom:12px;}
+.app-text p{font-size:13px;color:#777;line-height:1.8;margin-bottom:24px;}
+.app-features{display:flex;flex-direction:column;gap:10px;}
+.app-feature-row{display:flex;align-items:center;gap:10px;font-size:13px;color:#555;}
+.dot{width:7px;height:7px;background:var(--acc);border-radius:50%;flex-shrink:0;}
+.app-img{flex:1;min-width:240px;border-radius:16px;overflow:hidden;}
+.app-img img{width:100%;display:block;}
+
+/* SPEC TABLE */
+.spec-table-section{padding:78px 20px;background:#fff;}
+.spec-table-section .inner{max-width:680px;}
+.spec-table-section h2{font-size:22px;font-weight:700;text-align:center;margin-bottom:34px;}
+.spec-table{width:100%;border-collapse:collapse;font-size:13px;}
+.spec-table tr{border-bottom:1px solid #f0f0f0;}
+.spec-table tr:last-child{border-bottom:none;}
+.spec-table td{padding:13px 14px;vertical-align:top;line-height:1.6;}
+.spec-table td:first-child{color:#aaa;font-weight:500;width:40%;white-space:nowrap;}
+.spec-table td:last-child{color:#333;}
+.spec-table tr:hover{background:#fafafa;}
+
+/* NIGHT IMG */
+.night-img{max-width:500px;margin:0 auto 36px;border-radius:16px;overflow:hidden;}
+.night-img img{width:100%;display:block;}
+
+@media(max-width:600px){
+  .spec-div{display:none;}
+  .feature-split .inner{flex-direction:column !important;}
+  .app-section .inner{flex-direction:column;}
+  .safety-cards{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<section class="section hero">
+  <div class="inner">
+    <p class="hero-label">${esc(d.brand)} ${esc(d.modelEn)}</p>
+    <h1>${esc(d.brand)} ${esc(d.productName)}<br><span>${esc(d.heroSub)}</span></h1>
+    <p class="hero-sub">${esc(d.heroDesc).replace(/\n/g,'<br>')}</p>
+    ${heroImgHTML}
+    <div class="cert-badges">${certsHTML}</div>
+  </div>
+</section>
+
+<!-- SPECS BAR -->
+<section class="section specs-bar">
+  <div class="inner">${specsBarHTML}</div>
+</section>
+
+<!-- INTRO -->
+<section class="section intro-text">
+  <div class="inner">
+    <h2>${introHead}</h2>
+    <p>${esc(d.introDesc)}</p>
+  </div>
+</section>
+
+<!-- LIFESTYLE -->
+<section class="section lifestyle-block">
+  <div style="position:relative;">
+    ${lifestyleInner}
+    <div class="lifestyle-overlay-tags" style="position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;">${lifestyleTagsHTML}</div>
+  </div>
+</section>
+
+<!-- BIG STATS -->
+<section class="section big-stats">
+  <div class="inner">
+    <h2>${statsHead}</h2>
+    <p class="sub-desc">${esc(d.statsDesc)}</p>
+    <div class="stats-row">${bigStatsHTML}</div>
+  </div>
+</section>
+
+<!-- DARK -->
+<section class="section dark-section">
+  <div class="inner">
+    <div class="tag-pill white">${esc(d.darkTag)}</div>
+    <h2>${darkHead}</h2>
+    <p>${esc(d.darkDesc)}</p>
+    <div class="display-mockup">
+      <div class="display-temp">${esc(d.darkDisplay.replace('°C',''))}<span>°</span></div>
+      <div class="display-label">${esc(d.darkDisplaySub)}</div>
+    </div>
+  </div>
+</section>
+
+<!-- FEATURE SECTIONS -->
+${featureSectionsHTML}
+
+<!-- SAFETY -->
+<section class="section safety-section">
+  <div class="inner">
+    <div class="tag-pill white">다중 안전 보호 시스템</div>
+    <h2>가족 모두가 안심하고 사용하는<br>철저한 안전 설계</h2>
+    <p class="desc">총 ${d.safetyCards.length}중 안전 보호 시스템을 탑재해 아이도 반려동물도 걱정 없이 사용할 수 있습니다.</p>
+    <div class="safety-cards">${safetyCardsHTML}</div>
+  </div>
+</section>
+
+<!-- NIGHT MODE -->
+<section class="section night-section">
+  ${d.images.night ? `<div class="night-img"><img src="${d.images.night}" alt="night mode"></div>` : ''}
+  <h2>${nightHead}</h2>
+  <p>${esc(d.nightDesc)}</p>
+  <div class="db-display">${esc(d.nightDB)}<span>dB(A)</span></div>
+  <div class="db-caption">야간 저소음 모드 측정값 (근사치)</div>
+</section>
+
+<!-- APP -->
+<section class="section app-section">
+  <div class="inner">
+    <div class="app-text">
+      <div class="tag-pill">${esc(d.appTag)}</div>
+      <h2>${appHead}</h2>
+      <p>${esc(d.appDesc)}</p>
+      <div class="app-features">${appFeaturesHTML}</div>
+    </div>
+    ${d.images.feat3 ? `<div class="app-img"><img src="${d.images.feat3}" alt="app"></div>` : ''}
+  </div>
+</section>
+
+<!-- SPEC TABLE -->
+<section class="section spec-table-section">
+  <div class="inner">
+    <h2>제품 사양</h2>
+    <table class="spec-table">${specTableHTML}</table>
+  </div>
+</section>
+
+<!-- DISCLAIMER -->
+<section class="section" style="background:#f9f9f9;padding:30px 20px;">
+  <div class="inner" style="max-width:680px;">
+    <p style="font-size:11px;color:#bbb;line-height:2;">${esc(d.disclaimer).replace(/\n/g,'<br>')}</p>
+  </div>
+</section>
+
+</body>
+</html>`;
+}
+
+function esc(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ══════════════════════════════════════════════════
+//  미리보기 / 다운로드
+// ══════════════════════════════════════════════════
+function refreshPreview() {
+  const d = collectData();
+  const html = generateHTML(d);
+  const iframe = document.getElementById('previewIframe');
+  iframe.srcdoc = html;
+  showToast('미리보기 업데이트 완료!');
+}
+
+function previewPage() {
+  const d = collectData();
+  const html = generateHTML(d);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  window.open(url, '_blank');
+  showToast('새 탭에서 미리보기 열림');
+}
+
+function downloadHTML() {
+  const d = collectData();
+  const html = generateHTML(d);
+  const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  const fname = (d.brand + '_' + d.productName).replace(/[^a-zA-Z0-9가-힣]/g,'_').slice(0,40);
+  a.href = url;
+  a.download = fname + '_detail.html';
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('HTML 파일 다운로드 완료!');
+}
+
+function setPreviewWidth(w, btn) {
+  document.querySelectorAll('.scale-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const iframe = document.getElementById('previewIframe');
+  if (w === '100%') {
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
+  } else {
+    iframe.style.width = w;
+    iframe.style.height = '100%';
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  디자인 탭
+// ══════════════════════════════════════════════════
+function updateColorVal(input) {
+  document.getElementById('colorVal').textContent = input.value;
+}
+function setColor(hex) {
+  document.getElementById('accentColor').value = hex;
+  document.getElementById('colorVal').textContent = hex;
+}
+
+// ══════════════════════════════════════════════════
+//  토스트
+// ══════════════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+// ══════════════════════════════════════════════════
+//  초기화
+// ══════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  renderKeySpecs();
+  renderBigStats();
+  renderSafetyCards();
+  renderFeatureSections();
+  renderSpecTable();
+});
+</script>
+</body>
+</html>
