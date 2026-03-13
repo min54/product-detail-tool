@@ -632,78 +632,38 @@ Mi Home 앱으로 언제 어디서나 쾌적한 실내를 유지하세요.</text
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">기능 섹션 이미지 (최대 4장)</div>
-          <div class="img-grid">
-            <div>
-              <div class="img-label-tag">기능 이미지 1</div>
-              <div class="img-upload" id="upload-feat1" style="min-height:80px;">
-                <input type="file" accept="image/*" onchange="handleImageUpload('feat1', this)">
-                <div class="img-upload-placeholder" style="padding:14px;">
-                  <div class="up-icon" style="font-size:18px;">📷</div>
-                  <div class="up-text" style="font-size:10px;">기능 1</div>
-                </div>
-                <div class="img-upload-preview" id="preview-feat1">
-                  <img id="img-feat1" src="" alt="" style="height:80px;">
-                  <div class="img-label"><span id="name-feat1" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat1', event)">✕</span></div>
-                </div>
-              </div>
+          <div class="form-section-title">기능 섹션 이미지</div>
+          <div style="background:#f8f8f8;border-radius:8px;padding:12px;font-size:11px;color:#888;text-align:center;">
+            기능 이미지는 <b>[스펙·기능]</b> 탭의 각 기능 섹션에서 직접 업로드하세요
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section-title">야간 모드 이미지 (선택)</div>
+          <div class="img-upload" id="upload-night">
+            <input type="file" accept="image/*" onchange="handleImageUpload('night', this)">
+            <div class="img-upload-placeholder">
+              <div class="up-icon">🌙</div>
+              <div class="up-text">야간 모드 이미지</div>
             </div>
-            <div>
-              <div class="img-label-tag">기능 이미지 2</div>
-              <div class="img-upload" id="upload-feat2" style="min-height:80px;">
-                <input type="file" accept="image/*" onchange="handleImageUpload('feat2', this)">
-                <div class="img-upload-placeholder" style="padding:14px;">
-                  <div class="up-icon" style="font-size:18px;">📷</div>
-                  <div class="up-text" style="font-size:10px;">기능 2</div>
-                </div>
-                <div class="img-upload-preview" id="preview-feat2">
-                  <img id="img-feat2" src="" alt="" style="height:80px;">
-                  <div class="img-label"><span id="name-feat2" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat2', event)">✕</span></div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="img-label-tag">기능 이미지 3</div>
-              <div class="img-upload" id="upload-feat3" style="min-height:80px;">
-                <input type="file" accept="image/*" onchange="handleImageUpload('feat3', this)">
-                <div class="img-upload-placeholder" style="padding:14px;">
-                  <div class="up-icon" style="font-size:18px;">📷</div>
-                  <div class="up-text" style="font-size:10px;">기능 3</div>
-                </div>
-                <div class="img-upload-preview" id="preview-feat3">
-                  <img id="img-feat3" src="" alt="" style="height:80px;">
-                  <div class="img-label"><span id="name-feat3" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat3', event)">✕</span></div>
-                </div>
-              </div>
-            </div>
-            <div>
-              <div class="img-label-tag">기능 이미지 4</div>
-              <div class="img-upload" id="upload-feat4" style="min-height:80px;">
-                <input type="file" accept="image/*" onchange="handleImageUpload('feat4', this)">
-                <div class="img-upload-placeholder" style="padding:14px;">
-                  <div class="up-icon" style="font-size:18px;">📷</div>
-                  <div class="up-text" style="font-size:10px;">기능 4</div>
-                </div>
-                <div class="img-upload-preview" id="preview-feat4">
-                  <img id="img-feat4" src="" alt="" style="height:80px;">
-                  <div class="img-label"><span id="name-feat4" style="font-size:9px;max-width:80px;overflow:hidden;white-space:nowrap;">이미지</span><span class="img-clear" style="font-size:9px;" onclick="clearImage('feat4', event)">✕</span></div>
-                </div>
-              </div>
+            <div class="img-upload-preview" id="preview-night">
+              <img id="img-night" src="" alt="">
+              <div class="img-label"><span id="name-night">이미지</span><span class="img-clear" onclick="clearImage('night', event)">✕ 제거</span></div>
             </div>
           </div>
         </div>
 
         <div class="form-section">
-          <div class="form-section-title">야간·앱 섹션 이미지 (선택)</div>
-          <div class="img-upload" id="upload-night">
-            <input type="file" accept="image/*" onchange="handleImageUpload('night', this)">
+          <div class="form-section-title">앱 섹션 이미지 (선택)</div>
+          <div class="img-upload" id="upload-app">
+            <input type="file" accept="image/*" onchange="handleImageUpload('app', this)">
             <div class="img-upload-placeholder">
-              <div class="up-icon">🌙</div>
-              <div class="up-text">야간 또는 앱 UI 이미지</div>
+              <div class="up-icon">📱</div>
+              <div class="up-text">앱 UI / 스마트 연동 이미지</div>
             </div>
-            <div class="img-upload-preview" id="preview-night">
-              <img id="img-night" src="" alt="">
-              <div class="img-label"><span id="name-night">이미지</span><span class="img-clear" onclick="clearImage('night', event)">✕ 제거</span></div>
+            <div class="img-upload-preview" id="preview-app">
+              <img id="img-app" src="" alt="">
+              <div class="img-label"><span id="name-app">이미지</span><span class="img-clear" onclick="clearImage('app', event)">✕ 제거</span></div>
             </div>
           </div>
         </div>
@@ -927,6 +887,18 @@ const defaultFeatureSections = [
     desc: '상단 출풍구를 통해 따뜻한 공기를 위쪽으로 분사하면, 자연 대류 원리에 의해 공기가 360° 전방향으로 고르게 순환됩니다.',
     icons: [{ e: '🔄', t: '360° 순환' }, { e: '📐', t: '균일 온도' }, { e: '🏠', t: '전공간 난방' }, { e: '⚖️', t: '에너지 밸런스' }]
   },
+  {
+    tag: 'AI 스마트 온도 제어', imgKey: 'feat3', reverse: false,
+    head: '알아서 맞춰주는\n똑똑한 온도 관리',
+    desc: 'AI 알고리즘이 실내 온도 변화를 실시간으로 감지하고, 최적의 출력을 자동으로 조절합니다. 에너지 낭비 없이 항상 쾌적한 온도를 유지합니다.',
+    icons: [{ e: '🤖', t: 'AI 제어' }, { e: '📊', t: '실시간 분석' }, { e: '🎯', t: '정밀 유지' }, { e: '💰', t: '전기료 절감' }]
+  },
+  {
+    tag: 'Mi Home 앱 연동', imgKey: 'feat4', reverse: true,
+    head: '손끝 하나로\n어디서든 완벽 제어',
+    desc: 'Mi Home 앱을 통해 외출 중에도 온풍기를 제어할 수 있습니다. 예약 타이머, 온도 설정, 사용량 모니터링까지 스마트폰 하나로 관리하세요.',
+    icons: [{ e: '📱', t: '앱 제어' }, { e: '⏰', t: '예약 타이머' }, { e: '🌐', t: '원격 조작' }, { e: '📈', t: '사용량 확인' }]
+  },
 ];
 const defaultSpecTable = [
   ['정격 전압', '220V ~ 50/60Hz'],
@@ -1055,23 +1027,33 @@ function renderFeatureSections() {
   const container = document.getElementById('featureSections');
   container.innerHTML = '';
   defaultFeatureSections.forEach((f, i) => {
-    const imgKeys = ['feat1','feat2','feat3','feat4'];
-    const opts = imgKeys.map(k => `<option value="${k}" ${f.imgKey===k?'selected':''}>${k}</option>`).join('');
+    const imgKey = `feat${i+1}`;
+    f.imgKey = imgKey; // 항상 섹션 순서에 맞게 자동 매핑
+    const hasImg = images[imgKey];
     container.innerHTML += `
     <div class="dynamic-item">
       <button class="remove-btn" onclick="removeFeatureSection(${i})">✕</button>
-      <div class="form-section-title" style="margin-top:0;">섹션 ${i+1}</div>
+      <div class="form-section-title" style="margin-top:0;">기능 섹션 ${i+1}</div>
+      <div class="field">
+        <label>섹션 이미지</label>
+        <div class="img-upload" id="upload-fs-${i}" style="min-height:70px;">
+          <input type="file" accept="image/*" onchange="handleImageUpload('feat${i+1}', this)">
+          <div class="img-upload-placeholder" style="${hasImg?'display:none':''}">
+            <div class="up-icon" style="font-size:18px;">🖼</div>
+            <div class="up-text" style="font-size:10px;">기능${i+1} 이미지 업로드</div>
+          </div>
+          <div class="img-upload-preview" id="preview-fs-${i}" style="${hasImg?'display:block':'display:none'}">
+            <img src="${hasImg||''}" alt="" style="height:80px;width:100%;object-fit:cover;">
+            <div class="img-label"><span style="font-size:9px;">feat${i+1}</span><span class="img-clear" style="font-size:9px;" onclick="clearFeatureImage(${i}, event)">✕ 제거</span></div>
+          </div>
+        </div>
+      </div>
       <div class="field"><label>태그 텍스트</label><input type="text" id="fs-tag-${i}" value="${f.tag}"></div>
-      <div class="field-row">
-        <div class="field"><label>이미지</label>
-          <select id="fs-img-${i}">${opts}</select>
-        </div>
-        <div class="field"><label>이미지 위치</label>
-          <select id="fs-reverse-${i}">
-            <option value="0" ${!f.reverse?'selected':''}>왼쪽</option>
-            <option value="1" ${f.reverse?'selected':''}>오른쪽</option>
-          </select>
-        </div>
+      <div class="field"><label>이미지 위치</label>
+        <select id="fs-reverse-${i}">
+          <option value="0" ${!f.reverse?'selected':''}>왼쪽</option>
+          <option value="1" ${f.reverse?'selected':''}>오른쪽</option>
+        </select>
       </div>
       <div class="field"><label>헤드카피 (줄바꿈 가능)</label><textarea id="fs-head-${i}" rows="2">${f.head}</textarea></div>
       <div class="field"><label>설명</label><textarea id="fs-desc-${i}" rows="3">${f.desc}</textarea></div>
@@ -1081,9 +1063,15 @@ function renderFeatureSections() {
     </div>`;
   });
 }
+function clearFeatureImage(i, e) {
+  e.stopPropagation();
+  delete images[`feat${i+1}`];
+  renderFeatureSections();
+}
 function addFeatureSection() {
+  const nextIdx = defaultFeatureSections.length;
   defaultFeatureSections.push({
-    tag: '새 기능', imgKey: 'feat3', reverse: false,
+    tag: '새 기능', imgKey: `feat${nextIdx+1}`, reverse: nextIdx % 2 === 1,
     head: '기능 제목을\n입력하세요',
     desc: '기능 설명을 입력하세요.',
     icons: [{ e: '⭐', t: '기능1' }, { e: '⭐', t: '기능2' }, { e: '⭐', t: '기능3' }, { e: '⭐', t: '기능4' }]
@@ -1131,7 +1119,7 @@ function collectData() {
   // features
   const featureSections = defaultFeatureSections.map((_, i) => ({
     tag: v(`fs-tag-${i}`),
-    imgKey: v(`fs-img-${i}`),
+    imgKey: `feat${i+1}`,
     reverse: v(`fs-reverse-${i}`) === '1',
     head: v(`fs-head-${i}`),
     desc: v(`fs-desc-${i}`),
@@ -1512,7 +1500,7 @@ ${featureSectionsHTML}
       <p>${esc(d.appDesc)}</p>
       <div class="app-features">${appFeaturesHTML}</div>
     </div>
-    ${d.images.feat3 ? `<div class="app-img"><img src="${d.images.feat3}" alt="app"></div>` : ''}
+    ${d.images.app ? `<div class="app-img"><img src="${d.images.app}" alt="app"></div>` : ''}
   </div>
 </section>
 
@@ -1720,11 +1708,10 @@ function applyResearchData(d) {
   // 기능 섹션
   if (d.features && d.features.length > 0) {
     defaultFeatureSections.length = 0;
-    const imgKeys = ['feat1', 'feat2', 'feat3', 'feat4'];
     d.features.forEach((f, i) => {
       defaultFeatureSections.push({
         tag: f.tag || '',
-        imgKey: imgKeys[i % imgKeys.length],
+        imgKey: `feat${i+1}`,
         reverse: i % 2 === 1,
         head: f.head || '',
         desc: f.desc || '',

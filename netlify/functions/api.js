@@ -70,7 +70,7 @@ async function researchByName(productName) {
 }
 
 - 실제 제품 스펙을 기반으로 작성, 없으면 합리적으로 추정
-- features 3~4개, safetyCards 4~6개, bigStats 2~3개
+- features 반드시 4개, safetyCards 4~6개, bigStats 2~3개
 - 한국어로 작성`;
 
   return callGemini(prompt);

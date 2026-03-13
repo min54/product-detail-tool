@@ -103,7 +103,7 @@ async function researchByName(productName) {
 
 - 실제 제품 스펙을 기반으로 작성하세요
 - 수치는 정확하게, 없으면 합리적으로 추정하세요
-- features는 3~4개 작성하세요
+- features는 반드시 4개 작성하세요
 - safetyCards는 4~6개 작성하세요
 - bigStats는 2~3개 작성하세요
 - 한국어로 작성하세요`;
